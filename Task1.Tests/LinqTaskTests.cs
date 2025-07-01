@@ -260,7 +260,7 @@ namespace Task1.Tests
         public void Linq10_Suppliers_ReturnsAggregateString()
         {
             string result = LinqTask.Linq10(DataSource.Suppliers);
-            StringAssert.AreEqualIgnoringCase("UKUSAJapanSpainAustraliaSwedenBrazilGermany", result);
+            StringAssert.AreEqualIgnoringCase("UKUSAJapanSpainBrazilSwedenGermanyAustralia", result);
         }
 
         [Test]

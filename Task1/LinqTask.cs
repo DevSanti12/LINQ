@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Task1.DoNotChange;
 
 namespace Task1
@@ -84,11 +85,13 @@ namespace Task1
                 throw new ArgumentNullException();
 
             var customerQuery = customers
-                                .Where(c => c.Orders.Any())
+                                .Where(c => c.Orders.Any()) // Filter customers with orders
                                 .Select(c => (customer: c,
-                                              dateOfEntry: c.Orders.Min(o => o.OrderDate))) 
-                                .OrderBy(tuple => tuple.dateOfEntry);
-
+                                              dateOfEntry: c.Orders.Min(o => o.OrderDate))) // Extract date of entry and customer
+                                .OrderBy(o => o.dateOfEntry.Year) // Order by year (ascending)
+                                .ThenBy(o => o.dateOfEntry.Month) // Then by month (ascending)
+                                .ThenByDescending(o => o.customer.Orders.Sum(o => o.Total)) // Then by turnover (descending)
+                                .ThenBy(o => o.customer.CompanyName); // Then by customer name (alphabetical)
             return customerQuery;
         }
 
@@ -97,9 +100,17 @@ namespace Task1
             if (customers == null)
                 throw new ArgumentNullException();
 
-            var customerQuery = customers
-                                .Skip(2)
-                                .Where((c, index) => index != 3);
+            var customerQuery = customers.Where(c =>
+                                // a. Postal code contains non-digit characters
+                                (c.PostalCode != null && !Regex.IsMatch(c.PostalCode, @"^\d+$")) ||
+
+                                // b. Region is undefined
+                                string.IsNullOrEmpty(c.Region) ||
+
+                                // c. Phone does not contain an operator code (parentheses)
+                                (c.Phone == null || (!c.Phone.Contains("(") && !c.Phone.Contains(")")))
+            );
+
             return customerQuery;
         }
 
@@ -127,7 +138,7 @@ namespace Task1
                                         .Select(unitsInStockGroup => new Linq7UnitsInStockGroup
                                         {
                                             UnitsInStock = unitsInStockGroup.Key,
-                                            Prices = unitsInStockGroup.Select(p => p.UnitPrice)
+                                            Prices = unitsInStockGroup.Select(p => p.UnitPrice).OrderBy(price => price)
                                         })
                                 });
 
@@ -201,7 +212,9 @@ namespace Task1
 
             var uniqueCountries = suppliers
                                 .Select(s => s.Country)
-                                .Distinct(); 
+                                .Distinct()
+                                .OrderBy(c => c.Length)
+                                .ThenBy(c => c); 
             
             return string.Join("", uniqueCountries);
         }
